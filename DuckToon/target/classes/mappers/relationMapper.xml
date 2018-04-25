@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.triangle.mapper.RelationMapper">
+
+	<select id="myevalList" resultType="RelationshipVO">
+		select * from evaluation where userId = #{userId}
+	</select>
+	
+	<insert id="evaluateToon">
+		insert into evaluation (userId, webtoonId, rating, review) values(#{userId}, #{webtoonId}, #{rating}, #{review});
+	</insert>
+	
+	<update id="updateRating">
+		update evaluation set rating = #{rating} where userId = #{userId} and webtoonId = #{webtoonId}
+	</update>
+	
+	<delete id="deleteRating">
+		delete from evaluation where userId = #{userId} and webtoonId = #{webtoonId}
+	</delete>
+	
+	<select id="getSubscribe" resultType="WebtoonVO">
+		select * from webtoon natural join day natural join platform natural join writer natural join genre 
+		where webtoonId = any(select webtoonId from mywebtoon where userId = #{userId})
+		<if test="day != null">
+			and day like concat('%', #{day}, '%')
+		</if>
+		<if test="genre != null">
+			and genre like concat('%',#{genre},'%')
+		</if>
+		<if test="platform != null">
+			and platform like concat('%',#{platform},'%')
+		</if>
+	</select>
+	
+	<insert id="subscribe">
+		insert into mywebtoon values(#{userId}, #{webtoonId})
+	</insert>
+	
+	<delete id="deleteSubscribe">
+		delete from mywebtoon where userId = #{userId} and webtoonId = #{webtoonId}
+	</delete>
+
+	<select id="recommendList" resultType="WebtoonVO">
+		select * from webtoon natural join day natural join platform natural join writer natural join genre where webtoonId != all(select webtoonId from evaluation where userId=#{userId}) limit #{startNo}, #{num}
+	</select>
+	
+	<select id="isSubscribe" resultType="Integer">
+		select count(*) from mywebtoon where userId = #{userId} and webtoonId = #{webtoonId}
+	</select>
+	
+	<select id="recentWebtoon" resultType="WebtoonVO">
+		select * from webtoon natural join day natural join platform natural join writer natural join genre 
+		where webtoonId = any(select webtoonId from recentwebtoon where userId = #{userId}) limit 20
+	</select>
+	
+	<select id="reviewInfo" resultType="RelationshipVO">
+		select * from evaluation where webtoonId = #{webtoonId}
+	</select>
+	
+	<select id="searchResult" resultType="WebtoonVO">
+		select * from webtoon natural join day natural join platform natural join writer natural join genre where writer like concat('%', #{word}, '%') or webtoonName like concat('%', #{word}, '%') 
+	</select>
+</mapper>
